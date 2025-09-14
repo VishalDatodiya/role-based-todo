@@ -1,3 +1,4 @@
+from django.db.models import Q
 
 from rest_framework import generics
 from rest_framework import status
@@ -11,12 +12,23 @@ from task_app.models import Task
 class TaskListView(APIView):
 
     def get(self, request):
-        tasks = Task.objects.all()
+        search_query = request.query_params.get('search', None)
+        tasks = Task.objects.all().order_by('created_at')
+
+        if search_query:
+            tasks = tasks.filter(
+                Q(title__icontains=search_query) |
+                Q(status__icontains=search_query) |
+                Q(priority__icontains=search_query) |
+                Q(users__username=search_query)
+            )
+
         serializer = serializers.TaskSerializer(tasks, many=True)
         data = {
             "success": True,
             "task": serializer.data
         }
+
         return Response(data, status=status.HTTP_200_OK)
 
     def post(self, request):

@@ -1,10 +1,19 @@
 from rest_framework import serializers
 
 from task_app.models import Task, UserTask
+from user_app.models import User
+
+# creating this serializer to show some info of user in task list
+
+
+class UserSimpleSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'username']
 
 
 class TaskSerializer(serializers.ModelSerializer):
-    users = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    users = UserSimpleSerializer(many=True, read_only=True)
 
     class Meta:
         model = Task
