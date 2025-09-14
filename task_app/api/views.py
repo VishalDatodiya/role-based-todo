@@ -1,0 +1,62 @@
+
+from rest_framework import generics
+from rest_framework import status
+from rest_framework.response import Response
+from rest_framework.views import APIView
+
+from task_app.api import serializers
+from task_app.models import Task
+
+
+class TaskListView(APIView):
+
+    def get(self, request):
+        tasks = Task.objects.all()
+        serializer = serializers.TaskSerializer(tasks, many=True)
+        data = {
+            "success": True,
+            "task": serializer.data
+        }
+        return Response(data, status=status.HTTP_200_OK)
+
+    def post(self, request):
+        serializer = serializers.TaskSerializer(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            data = {
+                "success": True,
+                "message": "Task Created successfully",
+                "task": serializer.data
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            data = {
+                "success": False,
+                "message": "task not created",
+            }
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
+
+
+class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Task.objects.all()
+    serializer_class = serializers.TaskSerializer
+
+
+class TaskAssignUserView(APIView):
+
+    def post(self, request):
+        serializer = serializers.TaskAssignUserView(data=request.data)
+        if serializer.is_valid():
+            serializer.save()
+            data = {
+                "success": True,
+                "message": f"Task assigned to the user successfully."
+                # "message": f"Task {serializer.data["task"]} assigned to the user {serializer.data["user"]} successfully."
+            }
+            return Response(data, status=status.HTTP_200_OK)
+        else:
+            data = {
+                "success": False,
+                "message": "Something went wrong."
+            }
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
