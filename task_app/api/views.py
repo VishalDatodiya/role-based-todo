@@ -7,9 +7,12 @@ from rest_framework.views import APIView
 
 from task_app.api import serializers
 from task_app.models import Task
+from common.permissions import IsAdmin, IsAdminOrManager, IsTaskOwnerOrReadOnly
 
 
 class TaskListView(APIView):
+
+    permission_classes = [IsAdmin]
 
     def get(self, request):
         search_query = request.query_params.get('search', None)
@@ -52,6 +55,7 @@ class TaskListView(APIView):
 class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Task.objects.all()
     serializer_class = serializers.TaskSerializer
+    permission_classes = [IsTaskOwnerOrReadOnly]
 
 
 class TaskAssignUserView(APIView):
