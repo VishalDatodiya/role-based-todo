@@ -8,12 +8,14 @@ from rest_framework.views import APIView
 from task_app.api import serializers
 from task_app.models import Task
 from common.permissions import IsAdmin, IsAdminOrManager, IsTaskOwnerOrReadOnly
+from common.decorators import timer
 
 
 class TaskListView(APIView):
 
-    permission_classes = [IsAdmin]
+    permission_classes = [IsAdminOrManager]
 
+    @timer
     def get(self, request):
         search_query = request.query_params.get('search', None)
         tasks = Task.objects.all().order_by('created_at')
@@ -33,6 +35,11 @@ class TaskListView(APIView):
         }
 
         return Response(data, status=status.HTTP_200_OK)
+
+
+class TaskCreateView(APIView):
+
+    permission_classes = [IsAdmin]
 
     def post(self, request):
         serializer = serializers.TaskSerializer(data=request.data)
@@ -59,6 +66,7 @@ class TaskDetailView(generics.RetrieveUpdateDestroyAPIView):
 
 
 class TaskAssignUserView(APIView):
+    permission_classes = [IsAdminOrManager]
 
     def post(self, request):
         serializer = serializers.TaskAssignUserView(data=request.data)
