@@ -24,3 +24,12 @@ class IsTaskOwnerOrReadOnly(permissions.BasePermission):
             return obj.users.filter(id=request.user.id).exists()
 
         return False
+
+
+class IsCommentOwnerOrReadOnly(permissions.BasePermission):
+
+    def has_object_permission(self, request, view, obj):
+
+        if request.method in permissions.SAFE_METHODS:
+            True
+        return obj.user == request.user or request.user.role == 'ADMIN'

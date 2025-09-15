@@ -1,6 +1,8 @@
 from django.db import models
 from django.conf import settings
 
+from user_app.models import User
+
 
 class Task(models.Model):
     STATUS_CHOICES = (
@@ -40,7 +42,8 @@ class Task(models.Model):
 
 
 class UserTask(models.Model):
-    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL,
+                             on_delete=models.CASCADE)
     task = models.ForeignKey(Task, on_delete=models.CASCADE)
     assign_date = models.DateTimeField(auto_now_add=True)
     last_date = models.DateTimeField(null=True, blank=True)
@@ -50,3 +53,14 @@ class UserTask(models.Model):
 
     def __str__(self):
         return f"{self.user.username} -> {self.task.title}"
+
+
+class Comment(models.Model):
+    task = models.ForeignKey(
+        Task, on_delete=models.CASCADE, related_name="comments")
+    user = models.ForeignKey(User, on_delete=models.CASCADE)
+    text = models.TextField()
+    created = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return self.user.username + " | " + self.text[:20]
