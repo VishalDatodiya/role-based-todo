@@ -3,9 +3,11 @@ from django.contrib.auth import authenticate
 from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
 
 from rest_framework_simplejwt.tokens import RefreshToken
 from rest_framework_simplejwt.exceptions import AuthenticationFailed
+from rest_framework_simplejwt.tokens import RefreshToken
 
 from user_app.api.serializers import UserRegisterSerializer, UserLoginSerializer
 from user_app.models import User
@@ -60,3 +62,23 @@ class RegisterView(APIView):
             serializers.save()
             return Response(serializers.data, status=status.HTTP_200_OK)
         return Response(serializers.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+class Logout_view(APIView):
+
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        try:
+            refresh_token = request.data['refresh']
+
+            token = RefreshToken(refresh_token)
+            token.blacklist()
+            data = {"success": True, "message": "Logged out successfully"}
+            return Response(data, status=status.HTTP_200_OK)
+        except Exception as e:
+            data = {
+                "success": False,
+                "message": "You already logout or invalid token.",
+            }
+        return Response(data, status=status.HTTP_400_BAD_REQUEST)
