@@ -5,11 +5,14 @@ from rest_framework import status
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
+from rest_framework.pagination import PageNumberPagination
 
 from task_app.api import serializers
 from task_app.models import Task, Comment
 from common.permissions import IsAdmin, IsAdminOrManager, IsTaskOwnerOrReadOnly, IsCommentOwnerOrReadOnly
 from common.decorators import timer
+from common.pagination import StandardResultsSetPagination
+from common import constants
 
 
 class TaskListView(APIView):
@@ -28,8 +31,13 @@ class TaskListView(APIView):
                 Q(priority__icontains=search_query) |
                 Q(users__username=search_query)
             )
+        # serializer = serializers.TaskSerializer(tasks, many=True)
 
-        serializer = serializers.TaskSerializer(tasks, many=True)
+        paginator = PageNumberPagination()
+        paginator.page_size = constants.PAGE_SIZE
+        result_page = paginator.paginate_queryset(tasks, request)
+
+        serializer = serializers.TaskSerializer(result_page, many=True)
         data = {
             "success": True,
             "task": serializer.data
@@ -92,7 +100,13 @@ class CommentListView(APIView):
 
     def get(self, request, task_id):
         comments = Comment.objects.filter(task=task_id).order_by('-created')
-        serializer = serializers.CommentSerializer(comments, many=True)
+
+        paginator = PageNumberPagination()
+        paginator.page_size = constants.PAGE_SIZE
+        result_page = paginator.paginate_queryset(comments, request)
+        # serializer = serializers.CommentSerializer(comments, many=True)
+        serializer = serializers.CommentSerializer(result_page, many=True)
+
         data = {
             "success": True,
             "message": "Comments fetched successfully",
