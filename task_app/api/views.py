@@ -1,3 +1,4 @@
+from datetime import datetime
 from django.db.models import Q
 
 from rest_framework import generics
@@ -6,12 +7,13 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.pagination import PageNumberPagination
+from django.utils.dateparse import parse_datetime, parse_date
 
 from task_app.api import serializers
 from task_app.models import Task, Comment
 from common.permissions import IsAdmin, IsAdminOrManager, IsTaskOwnerOrReadOnly, IsCommentOwnerOrReadOnly
 from common.decorators import timer
-from common.pagination import StandardResultsSetPagination
+# from common.pagination import StandardResultsSetPagination
 from common import constants
 
 
@@ -21,16 +23,49 @@ class TaskListView(APIView):
 
     # @timer
     def get(self, request):
-        search_query = request.query_params.get('search', None)
+
+        title_search = request.query_params.get('title')
+        status_search = request.query_params.get('status')
+        priority_search = request.query_params.get('priority')
+        user_search = request.query_params.get('user')
+        due_before = request.query_params.get('due_before')
+        due_after = request.query_params.get('due_after')
+
         tasks = Task.objects.all().order_by('created_at')
 
-        if search_query:
-            tasks = tasks.filter(
-                Q(title__icontains=search_query) |
-                Q(status__icontains=search_query) |
-                Q(priority__icontains=search_query) |
-                Q(users__username=search_query)
-            )
+        # if search_query:
+        #     tasks = tasks.filter(
+        #         Q(title__icontains=search_query) |
+        #         Q(status__iexact=search_query) |
+        #         Q(priority__iexact=search_query) |
+        #         Q(users__username__icontains=search_query)
+        #     )
+
+        if title_search:
+            tasks = tasks.filter(title__icontains=title_search)
+
+        if status_search:
+            tasks = tasks.filter(status__iexact=status_search)
+
+        if priority_search:
+            tasks = tasks.filter(priority__iexact=priority_search)
+
+        if user_search:
+            tasks = tasks.filter(users__username__icontains=user_search)
+
+        if due_before:
+            # Try parsing as full datetime, fallback to date
+            parsed_date = parse_datetime(due_before) or parse_date(due_before)
+            if parsed_date:
+                tasks = tasks.filter(due_date__lte=parsed_date)
+
+        if due_after:
+            parsed_date = parse_datetime(due_after) or parse_date(due_after)
+            if parsed_date:
+                tasks = tasks.filter(due_date__gte=parsed_date)
+
+        tasks = tasks.distinct()
+
         # serializer = serializers.TaskSerializer(tasks, many=True)
 
         paginator = PageNumberPagination()
