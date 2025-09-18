@@ -7,3 +7,5 @@ class TaskAppConfig(AppConfig):
 
     def ready(self):
         import task_app.signals
+        from task_app.asp_cron import start_scheduler
+        start_scheduler()

@@ -41,9 +41,11 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
+    # External apps and libraries
     "rest_framework",
     "rest_framework_simplejwt",
     'rest_framework_simplejwt.token_blacklist',
+    # 'django_crontab',
     "user_app",
     'task_app',
 ]
@@ -171,3 +173,10 @@ EMAIL_USE_TLS = config("EMAIL_USE_TLS", cast=bool)
 EMAIL_HOST_USER = config("EMAIL_HOST_USER")
 EMAIL_HOST_PASSWORD = config("EMAIL_HOST_PASSWORD")
 DEFAULT_FROM_EMAIL = config("DEFAULT_FROM_EMAIL")
+
+
+# Register the cron tabs
+# CRONJOBS = [
+#     # Runs every day at 9 AM
+#     ('0 9 * * *', 'task_app.cron.send_due_soon_reminders'),
+# ]
